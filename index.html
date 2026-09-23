@@ -1,1 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>好きな顔9選メーカー</title>
+  <style>
+    /* 背景を淡い水色に変更 */
+    body { font-family: sans-serif; text-align: center; background: #f0f8ff; color: #333; margin: 0; padding: 20px; }
+    
+    /* メインタイトルとボタンの色を清潔感のある水色・ブルー系に変更 */
+    h1 { color: #008080; font-size: 22px; margin-bottom: 5px; }
+    .subtitle { color: #557788; font-size: 14px; margin-bottom: 15px; }
+    
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 400px; margin: 0 auto; }
+    .card { background: white; border-radius: 12px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+    
+    /* 選択したときの枠線と背景色を爽やかな水色に変更 */
+    .card.selected { border-color: #008080; background: #e6f7ff; }
+    .card img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; }
+    .card .name { font-weight: bold; margin-top: 5px; font-size: 14px; }
+    
+    /* ボタンの色をアクセントのミントグリーン〜水色系に変更 */
+    .btn { background: #008080; color: white; border: none; padding: 12px 24px; border-radius: 20px; font-size: 16px; margin-top: 20px; cursor: pointer; font-weight: bold; }
 
+    /* 結果画面のスタイル */
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 360px; margin: 20px auto; }
+    .result-card { background: white; border-radius: 8px; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 12px; position: relative; }
+    .result-card img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; }
+    
+    /* 順位バッジの色を水色に変更 */
+    .rank-badge { position: absolute; top: 2px; left: 2px; background: #008080; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+  <!-- 診断画面 -->
+  <div id="quiz-screen">
+    <h1 id="round-title">好きな顔選抜 (予選)</h1>
+    <p class="subtitle" id="round-desc">この中で好きな顔を選んでね！（複数OK）</p>
+    <div id="card-container" class="card-grid"></div>
+    <button id="next-btn" class="btn" onclick="nextPage()">次へ ➔</button>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="result-screen" style="display:none;">
+    <h1>✨あなたの「好きな顔TOP9」✨</h1>
+    <div id="result-container" class="result-grid"></div>
+    <button class="btn" onclick="location.reload()">最初からやり直す</button>
+  </div>
+
+  <script>
+    // メンバーのデータリスト (あなたの作ったリストをここに貼ります)
+    const members = [
+      { id: 1, name: "青木滉平", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-00-56-38-00_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 2, name: "浅井乃我", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-00-56-53-23_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 3, name: "安嶋秀生", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-00-57-12-17_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 4, name: "阿達慶", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-00-57-34-99_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 5, name: "猪狩蒼弥", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-04-38-27_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 6, name: "壱岐碧", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-04-55-35_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 7, name: "稲葉通陽", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-05-21-16_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 8, name: "井上瑞稀", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-05-40-27_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 9, name: "岩﨑大昇", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-16-27-68_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 10, name: "ヴァサイェガ渉", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-16-46-49_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 11, name: "浮所飛貴", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-17-19-61_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 12, name: "内村颯太", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-17-38-74_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 13, name: "岡橋亮汰", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-17-59-10_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 14, name: "織山尚大", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-18-23-15_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 15, name: "川崎皇輝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-18-49-03_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 16, name: "川崎星輝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-19-06-21_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 17, name: "岸蒼太", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-19-25-34_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 18, name: "北川拓実", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-20-01-62_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 19, name: "久保廉", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-20-26-53_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 20, name: "黒田光輝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-20-51-02_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 21, name: "小久保向一郎", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-21-14-61_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 22, name: "小山十輝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-21-36-04_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 23, name: "今野大輝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-21-53-73_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 24, name: "作間龍斗", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-56-08-34_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 25, name: "佐々木大光", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-56-37-54_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 26, name: "佐藤龍我", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-57-06-70_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 27, name: "新宮楓真", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-57-39-71_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 28, name: "末永光", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-58-00-34_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 29, name: "菅田琳寧", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-58-17-75_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 30, name: "鈴木瑛朝", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-58-37-14_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 31, name: "鈴木悠仁", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-59-14-61_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 32, name: "関翔馬", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-01-59-39-99_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 33, name: "善如寺來", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-00-05-13_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 34, name: "高橋奏琉", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-00-35-35_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 35, name: "竹村実悟", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-01-04-57_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 36, name: "田代海瑠", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-01-30-78_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 37, name: "田仲陽成", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-01-50-37_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 38, name: "田村海琉", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-02-11-66_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 39, name: "千井野空翔", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-02-24-20_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 40, name: "豊田陸人", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-02-41-45_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 41, name: "長瀬結星", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-04-16-82_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 42, name: "中村浩大", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-04-44-04_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 43, name: "中村嶺亜", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-05-12-38_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 44, name: "那須雄登", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-05-37-34_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 45, name: "鍋田大成", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-05-53-51_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 46, name: "西村拓哉", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-06-24-69_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 47, name: "橋本涼", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-06-54-22_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 48, name: "羽村仁成", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-07-15-27_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 49, name: "林蓮音", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-07-40-61_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 50, name: "林田芯", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-07-59-01_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 51, name: "檜山光成", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-08-23-25_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 52, name: "平田光寛", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-08-41-69_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 53, name: "深田竜生", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-09-00-21_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 54, name: "堀口由翔", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-09-15-00_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 55, name: "松浦銀志", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-09-36-66_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 56, name: "松尾龍", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-09-56-27_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 57, name: "宮岡大愛", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-10-16-09_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 58, name: "元木湧", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-10-36-16_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 59, name: "本髙克樹", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-13-00-73_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 60, name: "矢花黎", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-13-21-30_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 61, name: "山井飛翔", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-13-38-98_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 62, name: "和田優希", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-14-08-45_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 63, name: "渡辺惟良", img: "https://raw.githubusercontent.com/machall3/jr_sukigao/main/Screenshot_2026-09-22-02-14-34-11_40deb401b9ffe8e1df2f1cc5ba480b12.jpg" },
+      { id: 64, name: "岡佑吏", img: "" },
+      { id: 65, name: "嶋﨑斗亜", img: "" },
+      { id: 66, name: "西村拓哉", img: "" },
+      { id: 67, name: "浦陸斗", img: "" },
+      { id: 68, name: "大西風雅", img: "" },
+      { id: 69, name: "岡﨑彪太郎", img: "" },
+      { id: 70, name: "真弓孟之", img: "" },
+      { id: 71, name: "大内リオン", img: "" },
+      { id: 72, name: "永岡蓮王", img: "" },
+      { id: 73, name: "井上一太", img: "" },
+      { id: 74, name: "北村仁太郎", img: "" },
+      { id: 75, name: "角紳太郎", img: "" },
+      { id: 76, name: "野田開仁", img: "" },
+      { id: 77, name: "丸岡晃聖", img: "" },
+      { id: 78, name: "岡田耕明", img: "" },
+      { id: 79, name: "亀井海聖", img: "" },
+      { id: 80, name: "嵜本孝太郎", img: "" },
+      { id: 81, name: "千田藍生", img: "" },
+      { id: 82, name: "藤田真暢", img: "" },
+      { id: 83, name: "森ケイン", img: "" },
+      { id: 84, name: "山中一輝", img: "" },
+      { id: 85, name: "渡邉大我", img: "" },
+      { id: 86, name: "池川侑希弥", img: "" },
+      { id: 87, name: "伊藤篤志", img: "" },
+      { id: 88, name: "岩倉司", img: "" },
+      { id: 89, name: "上垣廣祐", img: "" },
+      { id: 90, name: "中川惺太", img: "" },
+      { id: 91, name: "西野統真", img: "" },
+      { id: 92, name: "井上蒼生", img: "" },
+      { id: 93, name: "北野快浬", img: "" },
+      { id: 94, name: "小尾颯", img: "" },
+      { id: 95, name: "中崎結翔", img: "" },
+      { id: 96, name: "濱出顕斗", img: "" },
+      { id: 97, name: "大田蒼空", img: "" }
+    ];
+
+  
+  let currentRoundCandidates = [];
+  let currentPage = 0;
+  const pageSize = 4;
+
+  // 予選で何票入ったか
+  let scores = {};
+
+  // 順位決定用
+  let activeMembers = [];
+  let ranking = [];
+  let rankingIndex = 0;
+
+  // 今比較している2人
+  let currentPair = null;
+
+  // すでに比較した組み合わせ
+  let compareResults = {};
+
+  // --------------------------------
+  // 初期化
+  // --------------------------------
+  function initApp() {
+    members.forEach(m => scores[m.id] = 0);
+
+    // メンバーをランダムに並べる
+    currentRoundCandidates = [...members].sort(() => Math.random() - 0.5);
+
+    showPage();
+  }
+
+
+  // --------------------------------
+  // 画面表示
+  // --------------------------------
+  function showPage() {
+    const container = document.getElementById("card-container");
+    container.innerHTML = "";
+
+    // 順位決定モード
+    if (currentPair) {
+
+      document.getElementById("round-title").innerText =
+        `順位決定戦`;
+
+      document.getElementById("round-desc").innerText =
+        `この2人なら、どっちの顔が好き？`;
+
+      currentPair.forEach(m => {
+
+        const card = document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML = `
+          <img src="${m.img}">
+          <div class="name">${m.name}</div>
+        `;
+
+        card.dataset.id = m.id;
+
+        card.onclick = () => {
+
+          document
+            .querySelectorAll(".card")
+            .forEach(c => c.classList.remove("selected"));
+
+          card.classList.add("selected");
+        };
+
+        container.appendChild(card);
+      });
+
+      return;
+    }
+
+
+    // --------------------------------
+    // 予選
+    // --------------------------------
+
+    document.getElementById("round-title").innerText =
+      "好きな顔選抜";
+
+    document.getElementById("round-desc").innerText =
+      "この中で好きな顔を選んでね！（複数OK）";
+
+    const start = currentPage * pageSize;
+
+    const pageMembers =
+      currentRoundCandidates.slice(start, start + pageSize);
+
+
+    // 予選終了
+    if (pageMembers.length === 0) {
+      startRanking();
+      return;
+    }
+
+
+    pageMembers.forEach(m => {
+
+      const card = document.createElement("div");
+
+      card.className = "card";
+
+      card.innerHTML = `
+        <img src="${m.img}">
+        <div class="name">${m.name}</div>
+      `;
+
+      card.dataset.id = m.id;
+
+      card.onclick = () => {
+        card.classList.toggle("selected");
+      };
+
+      container.appendChild(card);
+    });
+  }
+
+
+  // --------------------------------
+  // 次へ
+  // --------------------------------
+  function nextPage() {
+
+    const selectedCards =
+      document.querySelectorAll(".card.selected");
+
+
+    // --------------------------------
+    // 1対1順位決定
+    // --------------------------------
+    if (currentPair) {
+
+      if (selectedCards.length === 0) {
+
+        alert("どちらか好きな方の顔を選んでね！");
+
+        return;
+      }
+
+
+      const winnerId =
+        parseInt(selectedCards[0].dataset.id);
+
+
+      const loserId =
+        currentPair.find(m => m.id !== winnerId).id;
+
+
+      // 勝敗を記録
+      compareResults[
+        `${winnerId}_${loserId}`
+      ] = winnerId;
+
+
+      compareResults[
+        `${loserId}_${winnerId}`
+      ] = winnerId;
+
+
+      // 順位決定処理を続ける
+      currentPair = null;
+
+      continueRanking();
+
+      return;
+    }
+
+
+    // --------------------------------
+    // 予選
+    // --------------------------------
+
+    selectedCards.forEach(card => {
+
+      const id = parseInt(card.dataset.id);
+
+      scores[id] = (scores[id] || 0) + 1;
+
+    });
+
+
+    currentPage++;
+
+    showPage();
+  }
+
+
+  // --------------------------------
+  // 順位決定開始
+  // --------------------------------
+  function startRanking() {
+
+    // 予選で1票以上入った人
+    activeMembers =
+      members.filter(m => scores[m.id] > 0);
+
+
+    // 誰も選ばれていない場合
+    if (activeMembers.length === 0) {
+
+      alert("少なくとも1人は選んでね！");
+
+      location.reload();
+
+      return;
+    }
+
+
+    /*
+      予選票数の多い順に仮並び。
+
+      これをベースに、1対1比較で
+      順位を確定していく。
+    */
+    activeMembers.sort(
+      (a, b) => scores[b.id] - scores[a.id]
+    );
+
+
+    ranking = [];
+
+    rankingIndex = 0;
+
+    continueRanking();
+  }
+
+
+  // --------------------------------
+  // 順位決定
+  // --------------------------------
+  function continueRanking() {
+
+    /*
+      1位から順番に決めていく。
+
+      その順位の候補を比較して、
+      勝った人をその順位に確定。
+    */
+
+
+    // 9位まで決まったら終了
+    if (
+      ranking.length >= 9 ||
+      ranking.length >= activeMembers.length
+    ) {
+
+      // 残りを予選票数順に追加
+      const remaining =
+        activeMembers.filter(
+          m => !ranking.some(r => r.id === m.id)
+        );
+
+
+      remaining.sort(
+        (a, b) => scores[b.id] - scores[a.id]
+      );
+
+
+      ranking.push(...remaining);
+
+
+      showResult(ranking);
+
+      return;
+    }
+
+
+    /*
+      現在の順位に入れる候補。
+
+      まだ順位が決まっていない人の中から
+      まず1人を仮候補にする。
+    */
+    const remaining =
+      activeMembers.filter(
+        m => !ranking.some(r => r.id === m.id)
+      );
+
+
+    if (remaining.length === 0) {
+
+      showResult(ranking);
+
+      return;
+    }
+
+
+    let best = remaining[0];
+
+
+    /*
+      best と他の候補を1人ずつ比較。
+    */
+    for (let i = 1; i < remaining.length; i++) {
+
+      const opponent = remaining[i];
+
+      const result =
+        compareResults[
+          `${best.id}_${opponent.id}`
+        ];
+
+
+      if (result) {
+
+        // すでに比較済み
+        if (result === opponent.id) {
+          best = opponent;
+        }
+
+        continue;
+      }
+
+
+      /*
+        未比較なら、この2人を画面に出す。
+      */
+      currentPair = [best, opponent];
+
+      showPage();
+
+      return;
+    }
+
+
+    /*
+      全員との比較が終わったら
+      bestを現在順位に確定。
+    */
+    ranking.push(best);
+
+    continueRanking();
+  }
+
+
+  // --------------------------------
+  // 結果表示
+  // --------------------------------
+  function showResult(sortedList) {
+
+    document.getElementById("quiz-screen").style.display =
+      "none";
+
+    document.getElementById("result-screen").style.display =
+      "block";
+
+
+    const container =
+      document.getElementById("result-container");
+
+    container.innerHTML = "";
+
+
+    // 最大9人
+    const top9 =
+      sortedList.slice(0, 9);
+
+
+    top9.forEach((m, index) => {
+
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "result-card";
+
+
+      card.innerHTML = `
+        <div class="rank-badge">
+          ${index + 1}
+        </div>
+
+        <img src="${m.img}">
+
+        <div style="
+          font-weight:bold;
+          margin-top:3px;
+        ">
+          ${m.name}
+        </div>
+      `;
+
+
+      container.appendChild(card);
+    });
+  }
+
+
+  // --------------------------------
+  // アプリ起動
+  // --------------------------------
+  initApp();
+  </script>
+</body>
+</html>
